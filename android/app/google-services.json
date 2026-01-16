@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "540271340306",
+    "firebase_url": "https://resumebuilding-5f82f-default-rtdb.firebaseio.com",
+    "project_id": "resumebuilding-5f82f",
+    "storage_bucket": "resumebuilding-5f82f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540271340306:android:122a33a010be5771d961cb",
+        "android_client_info": {
+          "package_name": "com.example.resume_screening"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuzECHcrUeTwfK4K0E4TB5w6K0gU9TSEA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
