@@ -43,27 +43,34 @@ class Job {
         'hrId': hrId,
         'hrName': hrName,
         'postedDate': postedDate.toIso8601String(),
+        'createdAt': postedDate.toIso8601String(), // For Firebase compatibility
         'deadline': deadline?.toIso8601String(),
         'isActive': isActive,
         'applicationsCount': applicationsCount,
       };
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
-        id: json['id'],
-        title: json['title'],
-        description: json['description'],
-        requiredSkills: List<String>.from(json['requiredSkills']),
-        experienceLevel: json['experienceLevel'],
+        id: json['id'] ?? '',
+        title: json['title'] ?? '',
+        description: json['description'] ?? '',
+        requiredSkills: json['requiredSkills'] != null
+            ? List<String>.from(json['requiredSkills'])
+            : [],
+        experienceLevel: json['experienceLevel'] ?? 0,
         salaryRange: json['salaryRange'],
-        location: json['location'],
-        domain: json['domain'],
-        hrId: json['hrId'],
-        hrName: json['hrName'],
-        postedDate: DateTime.parse(json['postedDate']),
+        location: json['location'] ?? '',
+        domain: json['domain'] ?? '',
+        hrId: json['hrId'] ?? '',
+        hrName: json['hrName'] ?? '',
+        postedDate: json['postedDate'] != null
+            ? DateTime.parse(json['postedDate'])
+            : (json['createdAt'] != null
+                ? DateTime.parse(json['createdAt'])
+                : DateTime.now()),
         deadline: json['deadline'] != null
             ? DateTime.parse(json['deadline'])
             : null,
-        isActive: json['isActive'],
+        isActive: json['isActive'] ?? true,
         applicationsCount: json['applicationsCount'] ?? 0,
       );
 

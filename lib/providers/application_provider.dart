@@ -100,5 +100,35 @@ class ApplicationProvider with ChangeNotifier {
       return null;
     }
   }
+
+  Future<void> scheduleInterview({
+    required String applicationId,
+    required DateTime interviewDate,
+    required String interviewTime,
+    required String interviewerName,
+    required String interviewLocation,
+    String? interviewNotes,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    await Future.delayed(const Duration(seconds: 1));
+
+    final index = _applications.indexWhere((a) => a.id == applicationId);
+    if (index != -1) {
+      _applications[index] = _applications[index].copyWith(
+        status: ApplicationStatus.interviewScheduled,
+        interviewDate: interviewDate,
+        interviewTime: interviewTime,
+        interviewerName: interviewerName,
+        interviewLocation: interviewLocation,
+        interviewNotes: interviewNotes,
+        updatedDate: DateTime.now(),
+      );
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
 }
 

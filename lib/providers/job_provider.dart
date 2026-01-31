@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_database/firebase_database.dart';
 import '../models/job_model.dart';
+import '../services/firebase_database_service.dart';
 
 class JobProvider with ChangeNotifier {
   final List<Job> _jobs = [];
@@ -7,6 +9,8 @@ class JobProvider with ChangeNotifier {
   String? _searchQuery;
   String? _filterDomain;
   String? _filterLocation;
+  final FirebaseDatabaseService _databaseService = FirebaseDatabaseService();
+  DatabaseReference? _jobsRef;
 
   List<Job> get jobs => _jobs;
   List<Job> get activeJobs =>
@@ -43,53 +47,73 @@ class JobProvider with ChangeNotifier {
     return filtered;
   }
 
-  // Initialize with mock data
-  void initializeMockData() {
-    _jobs.addAll([
-      Job(
-        id: '1',
-        title: 'Senior Flutter Developer',
-        description:
-            'We are looking for an experienced Flutter developer to join our mobile team. You will be responsible for developing and maintaining mobile applications.',
-        requiredSkills: ['Flutter', 'Dart', 'REST APIs', 'State Management'],
-        experienceLevel: 3,
-        salaryRange: '\$80,000 - \$120,000',
-        location: 'Remote',
-        domain: 'Mobile Development',
-        hrId: 'hr1',
-        hrName: 'John Doe',
-        applicationsCount: 5,
-      ),
-      Job(
-        id: '2',
-        title: 'UI/UX Designer',
-        description:
-            'Join our design team to create beautiful and intuitive user interfaces. Experience with Figma and design systems required.',
-        requiredSkills: ['Figma', 'UI/UX Design', 'Prototyping', 'User Research'],
-        experienceLevel: 2,
-        salaryRange: '\$60,000 - \$90,000',
-        location: 'New York',
-        domain: 'Design',
-        hrId: 'hr2',
-        hrName: 'Jane Smith',
-        applicationsCount: 8,
-      ),
-      Job(
-        id: '3',
-        title: 'Backend Developer',
-        description:
-            'We need a backend developer with experience in Node.js and databases. You will work on scalable APIs and microservices.',
-        requiredSkills: ['Node.js', 'MongoDB', 'REST APIs', 'AWS'],
-        experienceLevel: 4,
-        salaryRange: '\$90,000 - \$130,000',
-        location: 'San Francisco',
-        domain: 'Backend Development',
-        hrId: 'hr1',
-        hrName: 'John Doe',
-        applicationsCount: 12,
-      ),
-    ]);
+  /// Initialize and load jobs from Firebase Realtime Database
+  Future<void> loadJobs() async {
+    if (_isLoading) return;
+    
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      // Load initial jobs
+      final jobsData = await _databaseService.getJobs();
+      _jobs.clear();
+      
+      for (var jobData in jobsData) {
+        try {
+          final job = Job.fromJson(jobData);
+          _jobs.add(job);
+        } catch (e) {
+          print('Error parsing job: $e');
+        }
+      }
+
+      // Set up real-time listener
+      _setupRealtimeListener();
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      print('Error loading jobs: $e');
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Set up real-time listener for job updates
+  void _setupRealtimeListener() {
+    _jobsRef?.onDisconnect();
+    _jobsRef = _databaseService.getJobsStream();
+    
+    _jobsRef?.onValue.listen((event) {
+      if (event.snapshot.value == null) {
+        _jobs.clear();
+        notifyListeners();
+        return;
+      }
+
+      final data = event.snapshot.value as Map<dynamic, dynamic>;
+      _jobs.clear();
+
+      for (var entry in data.entries) {
+        try {
+          final jobData = Map<String, dynamic>.from(entry.value as Map<dynamic, dynamic>);
+          final job = Job.fromJson(jobData);
+          _jobs.add(job);
+        } catch (e) {
+          print('Error parsing job from real-time update: $e');
+        }
+      }
+
+      notifyListeners();
+    });
+  }
+
+  /// Dispose real-time listener
+  @override
+  void dispose() {
+    _jobsRef?.onDisconnect();
+    super.dispose();
   }
 
   void setSearchQuery(String? query) {
@@ -118,37 +142,83 @@ class JobProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
-
-    _jobs.add(job);
-    _isLoading = false;
-    notifyListeners();
+    try {
+      final jobData = job.toJson();
+      final jobId = await _databaseService.createJob(jobData);
+      
+      if (jobId != null) {
+        // Job will be added via real-time listener
+        // But we can also add it locally for immediate UI update
+        final newJob = Job.fromJson({...jobData, 'id': jobId});
+        _jobs.add(newJob);
+        notifyListeners();
+      } else {
+        throw Exception('Failed to create job');
+      }
+    } catch (e) {
+      print('Error creating job: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> updateJob(Job updatedJob) async {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final jobData = updatedJob.toJson();
+      // Remove id and createdAt from update data (they shouldn't be updated)
+      jobData.remove('id');
+      jobData.remove('createdAt');
+      jobData['updatedAt'] = DateTime.now().toIso8601String();
 
-    final index = _jobs.indexWhere((j) => j.id == updatedJob.id);
-    if (index != -1) {
-      _jobs[index] = updatedJob;
+      final success = await _databaseService.updateJob(updatedJob.id, jobData);
+      
+      if (!success) {
+        throw Exception('Failed to update job');
+      }
+      
+      // Job will be updated via real-time listener
+      // But we can also update locally for immediate UI update
+      final index = _jobs.indexWhere((j) => j.id == updatedJob.id);
+      if (index != -1) {
+        _jobs[index] = updatedJob;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error updating job: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<void> deleteJob(String jobId) async {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
-
-    _jobs.removeWhere((j) => j.id == jobId);
-    _isLoading = false;
-    notifyListeners();
+    try {
+      final success = await _databaseService.deleteJob(jobId);
+      
+      if (!success) {
+        throw Exception('Failed to delete job');
+      }
+      
+      // Job will be removed via real-time listener
+      // But we can also remove locally for immediate UI update
+      _jobs.removeWhere((j) => j.id == jobId);
+      notifyListeners();
+    } catch (e) {
+      print('Error deleting job: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Job? getJobById(String jobId) {

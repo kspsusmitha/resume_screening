@@ -36,22 +36,26 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # State Management
-  provider: ^6.1.1
+  provider: ^6.1.2
   
   # Google Gemini AI
-  google_generative_ai: ^0.2.2
+  google_generative_ai: ^0.4.7
   
   # File handling
-  file_picker: ^6.1.1
-  path_provider: ^2.1.1
+  file_picker: ^10.3.8
+  path_provider: ^2.1.2
   
   # PDF generation
   pdf: ^3.10.7
   printing: ^5.12.0
+  syncfusion_flutter_pdfviewer: ^28.1.36
   
   # Video recording
-  camera: ^0.10.5+5
-  video_player: ^2.8.2
+  camera: ^0.11.0
+  video_player: ^2.8.3
+  
+  # Firebase Storage
+  firebase_storage: ^13.0.5
   
   # UI enhancements
   flutter_svg: ^2.0.9
@@ -61,8 +65,11 @@ dependencies:
   # HTTP requests
   http: ^1.2.0
   
+  # URL launcher
+  url_launcher: ^6.2.5
+  
   # Date formatting
-  intl: ^0.19.0
+  intl: ^0.20.2
   firebase_core: ^4.3.0
   firebase_database: ^12.1.1
 
@@ -75,7 +82,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

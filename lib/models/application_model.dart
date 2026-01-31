@@ -16,6 +16,12 @@ class Application {
   final String? notes;
   final DateTime appliedDate;
   final DateTime? updatedDate;
+  // Interview scheduling fields
+  final DateTime? interviewDate;
+  final String? interviewTime;
+  final String? interviewerName;
+  final String? interviewLocation; // Physical location or meeting link
+  final String? interviewNotes;
 
   Application({
     required this.id,
@@ -33,6 +39,11 @@ class Application {
     this.notes,
     DateTime? appliedDate,
     this.updatedDate,
+    this.interviewDate,
+    this.interviewTime,
+    this.interviewerName,
+    this.interviewLocation,
+    this.interviewNotes,
   }) : appliedDate = appliedDate ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -51,6 +62,11 @@ class Application {
         'notes': notes,
         'appliedDate': appliedDate.toIso8601String(),
         'updatedDate': updatedDate?.toIso8601String(),
+        'interviewDate': interviewDate?.toIso8601String(),
+        'interviewTime': interviewTime,
+        'interviewerName': interviewerName,
+        'interviewLocation': interviewLocation,
+        'interviewNotes': interviewNotes,
       };
 
   factory Application.fromJson(Map<String, dynamic> json) => Application(
@@ -79,6 +95,13 @@ class Application {
         updatedDate: json['updatedDate'] != null
             ? DateTime.parse(json['updatedDate'])
             : null,
+        interviewDate: json['interviewDate'] != null
+            ? DateTime.parse(json['interviewDate'])
+            : null,
+        interviewTime: json['interviewTime'],
+        interviewerName: json['interviewerName'],
+        interviewLocation: json['interviewLocation'],
+        interviewNotes: json['interviewNotes'],
       );
 
   Application copyWith({
@@ -97,6 +120,11 @@ class Application {
     String? notes,
     DateTime? appliedDate,
     DateTime? updatedDate,
+    DateTime? interviewDate,
+    String? interviewTime,
+    String? interviewerName,
+    String? interviewLocation,
+    String? interviewNotes,
   }) {
     return Application(
       id: id ?? this.id,
@@ -114,6 +142,11 @@ class Application {
       notes: notes ?? this.notes,
       appliedDate: appliedDate ?? this.appliedDate,
       updatedDate: updatedDate ?? this.updatedDate,
+      interviewDate: interviewDate ?? this.interviewDate,
+      interviewTime: interviewTime ?? this.interviewTime,
+      interviewerName: interviewerName ?? this.interviewerName,
+      interviewLocation: interviewLocation ?? this.interviewLocation,
+      interviewNotes: interviewNotes ?? this.interviewNotes,
     );
   }
 }

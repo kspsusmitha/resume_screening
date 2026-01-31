@@ -10,6 +10,7 @@ import 'my_applications_screen.dart';
 import '../resume_builder_screen.dart';
 import '../interview_preparation_screen.dart';
 import '../video_resume_screen.dart';
+import '../my_resumes_screen.dart';
 
 class CandidateHomeScreen extends StatefulWidget {
   const CandidateHomeScreen({super.key});
@@ -25,7 +26,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<JobProvider>(context, listen: false).initializeMockData();
+      Provider.of<JobProvider>(context, listen: false).loadJobs();
     });
   }
 
@@ -182,7 +183,29 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
               ),
               SlideInWidget(
                 direction: SlideDirection.left,
-                delay: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 450),
+                child: _ActionCard(
+                  title: 'My Resumes',
+                  icon: Icons.folder,
+                  color: Colors.purple,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const MyResumesScreen(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          return FadeTransition(opacity: animation, child: child);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SlideInWidget(
+                direction: SlideDirection.right,
+                delay: const Duration(milliseconds: 550),
                 child: _ActionCard(
                   title: 'Interview Prep',
                   icon: Icons.quiz,
@@ -203,7 +226,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                 ),
               ),
               SlideInWidget(
-                direction: SlideDirection.right,
+                direction: SlideDirection.left,
                 delay: const Duration(milliseconds: 600),
                 child: _ActionCard(
                   title: 'Video Resume',

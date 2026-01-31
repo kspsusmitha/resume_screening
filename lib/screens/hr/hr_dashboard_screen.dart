@@ -25,7 +25,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<JobProvider>(context, listen: false).initializeMockData();
+      Provider.of<JobProvider>(context, listen: false).loadJobs();
     });
   }
 

@@ -94,14 +94,21 @@ Only return the JSON, no additional text.
     required String? education,
   }) async {
     final prompt = '''
-Generate a professional resume summary (2-3 sentences) for a candidate with the following information:
+Generate a professional resume summary (3-4 sentences) for a candidate with the following information:
 
 Name: $name
 Skills: ${skills.join(', ')}
 Experience: ${experience.join('; ')}
 Education: ${education ?? 'Not specified'}
 
-Create an impactful, ATS-friendly professional summary that highlights key qualifications and experience.
+IMPORTANT: Do NOT just list keywords. Instead, elaborate on each skill and experience:
+- Expand each skill into a meaningful description of expertise
+- Elaborate on experience with specific achievements and impact
+- Create detailed, professional sentences that showcase depth of knowledge
+- Use action verbs and quantify achievements where possible
+- Make it ATS-friendly but also human-readable
+
+Create an impactful, detailed professional summary that elaborates on qualifications rather than just listing them.
 ''';
 
     return await generateText(prompt);
@@ -109,11 +116,17 @@ Create an impactful, ATS-friendly professional summary that highlights key quali
 
   Future<String> improveResumeBulletPoint(String bulletPoint) async {
     final prompt = '''
-Improve the following resume bullet point to be more impactful and ATS-friendly. Use action verbs and quantify achievements where possible:
+Transform the following resume bullet point into a detailed, professional description. 
 
-"$bulletPoint"
+If it contains only keywords or short phrases, ELABORATE them into full sentences:
+- Expand keywords into meaningful descriptions
+- Add context, impact, and achievements
+- Use action verbs and quantify results where possible
+- Make it ATS-friendly and impactful
 
-Return only the improved bullet point, no additional text.
+Input: "$bulletPoint"
+
+Return only the improved, elaborated bullet point (1-2 sentences), no additional text.
 ''';
 
     return await generateText(prompt);
