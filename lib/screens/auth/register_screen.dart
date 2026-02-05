@@ -52,7 +52,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       phone: _phoneController.text.trim().isEmpty
           ? null
           : _phoneController.text.trim(),
-      company: widget.role == UserRole.hr &&
+      company:
+          widget.role == UserRole.hr &&
               _companyController.text.trim().isNotEmpty
           ? _companyController.text.trim()
           : null,
@@ -65,19 +66,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (success) {
       final user = authProvider.currentUser;
       if (user != null) {
-        Navigator.of(context).pushReplacement(
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (_) => user.role == UserRole.hr
                 ? const HRDashboardScreen()
                 : const CandidateHomeScreen(),
           ),
+          (route) => false,
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            authProvider.errorMessage ?? 'Registration failed. Please try again.',
+            authProvider.errorMessage ??
+                'Registration failed. Please try again.',
           ),
           backgroundColor: Colors.red,
         ),
@@ -89,7 +92,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.role == UserRole.hr ? 'HR' : 'Candidate'} Register'),
+        title: Text(
+          '${widget.role == UserRole.hr ? 'HR' : 'Candidate'} Register',
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -101,7 +106,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 const SizedBox(height: 32),
                 Icon(
-                  widget.role == UserRole.hr ? Icons.business_center : Icons.person,
+                  widget.role == UserRole.hr
+                      ? Icons.business_center
+                      : Icons.person,
                   size: 64,
                   color: AppTheme.primaryColor,
                 ),
@@ -177,7 +184,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() => _obscurePassword = !_obscurePassword);
@@ -208,8 +217,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             : Icons.visibility_off,
                       ),
                       onPressed: () {
-                        setState(() =>
-                            _obscureConfirmPassword = !_obscureConfirmPassword);
+                        setState(
+                          () => _obscureConfirmPassword =
+                              !_obscureConfirmPassword,
+                        );
                       },
                     ),
                   ),
@@ -247,4 +258,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-

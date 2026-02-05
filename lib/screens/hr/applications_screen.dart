@@ -22,16 +22,17 @@ class ApplicationsScreen extends StatelessWidget {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Applications'),
-      ),
+      // Removed AppBar as this screen is embedded in AdminDashboardScreen's IndexedStack
       body: applications.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.assignment_outlined,
-                      size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.assignment_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No applications yet',
@@ -152,4 +153,3 @@ class _CategoryChip extends StatelessWidget {
     );
   }
 }
-

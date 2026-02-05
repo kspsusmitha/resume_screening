@@ -59,15 +59,16 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     if (success) {
       final user = authProvider.currentUser;
       if (user != null && user.role == UserRole.admin) {
-        Navigator.of(context).pushReplacement(
+        Navigator.of(context).pushAndRemoveUntil(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 const AdminDashboardScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+                  return FadeTransition(opacity: animation, child: child);
+                },
           ),
+          (route) => false,
         );
       }
     } else {
@@ -85,19 +86,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Login'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Admin Login'), elevation: 0),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              Colors.red.withOpacity(0.03),
-            ],
+            colors: [Colors.white, Colors.red.withOpacity(0.03)],
           ),
         ),
         child: SafeArea(
@@ -134,9 +129,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     child: Text(
                       'Admin Access',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -146,8 +141,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     child: Text(
                       'System Administrator Login',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
+                        color: AppTheme.textSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -195,7 +190,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                 : Icons.visibility_off,
                           ),
                           onPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
+                            setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            );
                           },
                         ),
                         filled: true,
@@ -224,7 +221,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                          const Icon(
+                            Icons.info_outline,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

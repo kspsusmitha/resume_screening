@@ -37,7 +37,13 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Job Portal'),
+        title: Text(
+          _selectedIndex == 0
+              ? 'Job Portal'
+              : _selectedIndex == 1
+              ? 'My Applications'
+              : 'Profile',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -51,31 +57,19 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
       body: _selectedIndex == 0
           ? _buildHome(user)
           : _selectedIndex == 1
-              ? const JobBrowseScreen()
-              : _selectedIndex == 2
-                  ? const MyApplicationsScreen()
-                  : _buildProfile(user),
+          ? const MyApplicationsScreen()
+          : _buildProfile(user),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Browse Jobs',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment),
             label: 'My Applications',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
@@ -113,16 +107,15 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                     children: [
                       Text(
                         'Welcome, ${user?.name ?? 'Candidate'}!',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Ready to find your dream job?',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -135,9 +128,9 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
             delay: const Duration(milliseconds: 200),
             child: Text(
               'Quick Actions',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 16),
@@ -156,7 +149,14 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                   title: 'Browse Jobs',
                   icon: Icons.search,
                   color: AppTheme.primaryColor,
-                  onTap: () => setState(() => _selectedIndex = 1),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const JobBrowseScreen(),
+                      ),
+                    );
+                  },
                 ),
               ),
               SlideInWidget(
@@ -174,8 +174,11 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                             const ResumeBuilderScreen(),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                       ),
                     );
                   },
@@ -196,8 +199,11 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                             const MyResumesScreen(),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                       ),
                     );
                   },
@@ -218,8 +224,11 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                             const InterviewPreparationScreen(),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                       ),
                     );
                   },
@@ -240,8 +249,11 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                             const VideoResumeScreen(),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
-                          return FadeTransition(opacity: animation, child: child);
-                        },
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                       ),
                     );
                   },
@@ -269,10 +281,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                     backgroundColor: AppTheme.primaryColor,
                     child: Text(
                       user?.name[0].toUpperCase() ?? 'C',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 32, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -375,13 +384,13 @@ class _ActionCardState extends State<_ActionCard>
                           color: widget.color.withOpacity(0.15),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(widget.icon,
-                            color: widget.color, size: 32),
+                        child: Icon(widget.icon, color: widget.color, size: 32),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         widget.title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: _isHovered ? widget.color : null,
                             ),
@@ -398,4 +407,3 @@ class _ActionCardState extends State<_ActionCard>
     );
   }
 }
-

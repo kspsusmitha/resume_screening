@@ -12,6 +12,7 @@ class Job {
   final DateTime postedDate;
   final DateTime? deadline;
   final bool isActive;
+  final bool isApproved;
   final int applicationsCount;
 
   Job({
@@ -28,51 +29,54 @@ class Job {
     DateTime? postedDate,
     this.deadline,
     this.isActive = true,
+    this.isApproved = false, // Default to not approved
     this.applicationsCount = 0,
   }) : postedDate = postedDate ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'requiredSkills': requiredSkills,
-        'experienceLevel': experienceLevel,
-        'salaryRange': salaryRange,
-        'location': location,
-        'domain': domain,
-        'hrId': hrId,
-        'hrName': hrName,
-        'postedDate': postedDate.toIso8601String(),
-        'createdAt': postedDate.toIso8601String(), // For Firebase compatibility
-        'deadline': deadline?.toIso8601String(),
-        'isActive': isActive,
-        'applicationsCount': applicationsCount,
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'requiredSkills': requiredSkills,
+    'experienceLevel': experienceLevel,
+    'salaryRange': salaryRange,
+    'location': location,
+    'domain': domain,
+    'hrId': hrId,
+    'hrName': hrName,
+    'postedDate': postedDate.toIso8601String(),
+    'createdAt': postedDate.toIso8601String(), // For Firebase compatibility
+    'deadline': deadline?.toIso8601String(),
+    'isActive': isActive,
+    'isApproved': isApproved,
+    'applicationsCount': applicationsCount,
+  };
 
   factory Job.fromJson(Map<String, dynamic> json) => Job(
-        id: json['id'] ?? '',
-        title: json['title'] ?? '',
-        description: json['description'] ?? '',
-        requiredSkills: json['requiredSkills'] != null
-            ? List<String>.from(json['requiredSkills'])
-            : [],
-        experienceLevel: json['experienceLevel'] ?? 0,
-        salaryRange: json['salaryRange'],
-        location: json['location'] ?? '',
-        domain: json['domain'] ?? '',
-        hrId: json['hrId'] ?? '',
-        hrName: json['hrName'] ?? '',
-        postedDate: json['postedDate'] != null
-            ? DateTime.parse(json['postedDate'])
-            : (json['createdAt'] != null
-                ? DateTime.parse(json['createdAt'])
-                : DateTime.now()),
-        deadline: json['deadline'] != null
-            ? DateTime.parse(json['deadline'])
-            : null,
-        isActive: json['isActive'] ?? true,
-        applicationsCount: json['applicationsCount'] ?? 0,
-      );
+    id: json['id'] ?? '',
+    title: json['title'] ?? '',
+    description: json['description'] ?? '',
+    requiredSkills: json['requiredSkills'] != null
+        ? List<String>.from(json['requiredSkills'])
+        : [],
+    experienceLevel: json['experienceLevel'] ?? 0,
+    salaryRange: json['salaryRange'],
+    location: json['location'] ?? '',
+    domain: json['domain'] ?? '',
+    hrId: json['hrId'] ?? '',
+    hrName: json['hrName'] ?? '',
+    postedDate: json['postedDate'] != null
+        ? DateTime.parse(json['postedDate'])
+        : (json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now()),
+    deadline: json['deadline'] != null
+        ? DateTime.parse(json['deadline'])
+        : null,
+    isActive: json['isActive'] ?? true,
+    isApproved: json['isApproved'] ?? false,
+    applicationsCount: json['applicationsCount'] ?? 0,
+  );
 
   Job copyWith({
     String? id,
@@ -88,6 +92,7 @@ class Job {
     DateTime? postedDate,
     DateTime? deadline,
     bool? isActive,
+    bool? isApproved,
     int? applicationsCount,
   }) {
     return Job(
@@ -104,8 +109,8 @@ class Job {
       postedDate: postedDate ?? this.postedDate,
       deadline: deadline ?? this.deadline,
       isActive: isActive ?? this.isActive,
+      isApproved: isApproved ?? this.isApproved,
       applicationsCount: applicationsCount ?? this.applicationsCount,
     );
   }
 }
-

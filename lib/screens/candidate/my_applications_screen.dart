@@ -17,90 +17,90 @@ class MyApplicationsScreen extends StatelessWidget {
     final jobProvider = Provider.of<JobProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
 
-    final myApplications = applicationProvider
-        .getApplicationsByCandidate(authProvider.currentUser?.id ?? '');
+    final myApplications = applicationProvider.getApplicationsByCandidate(
+      authProvider.currentUser?.id ?? '',
+    );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Applications'),
-      ),
-      body: myApplications.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.assignment_outlined,
-                      size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No applications yet',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start applying to jobs!',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: myApplications.length,
-              itemBuilder: (context, index) {
-                final application = myApplications[index];
-                final job = jobProvider.getJobById(application.jobId);
+    return myApplications.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.assignment_outlined,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No applications yet',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Start applying to jobs!',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: myApplications.length,
+            itemBuilder: (context, index) {
+              final application = myApplications[index];
+              final job = jobProvider.getJobById(application.jobId);
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ExpansionTile(
-                    leading: _StatusIcon(application.status),
-                    title: Text(
-                      job?.title ?? 'Unknown Job',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ExpansionTile(
+                  leading: _StatusIcon(application.status),
+                  title: Text(
+                    job?.title ?? 'Unknown Job',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(
+                        'Status: ${application.status.toString().split('.').last.toUpperCase()}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: _getStatusColor(application.status),
+                        ),
+                      ),
+                      if (application.matchPercentage != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Status: ${application.status.toString().split('.').last.toUpperCase()}',
+                          'Match: ${application.matchPercentage!.toStringAsFixed(1)}%',
                           style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: _getStatusColor(application.status),
+                            color: application.matchPercentage! >= 70
+                                ? AppTheme.accentColor
+                                : AppTheme.warningColor,
                           ),
                         ),
-                        if (application.matchPercentage != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Match: ${application.matchPercentage!.toStringAsFixed(1)}%',
-                            style: TextStyle(
-                              color: application.matchPercentage! >= 70
-                                  ? AppTheme.accentColor
-                                  : AppTheme.warningColor,
-                            ),
-                          ),
-                        ],
                       ],
-                    ),
-                    children: [
-                      if (application.status == ApplicationStatus.interviewScheduled &&
-                          application.interviewDate != null)
-                        _InterviewDetailsCard(application: application)
-                      else
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            'Applied on ${DateFormat('MMM dd, yyyy').format(application.appliedDate)}',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ),
                     ],
                   ),
-                );
-              },
-            ),
-    );
+                  children: [
+                    if (application.status ==
+                            ApplicationStatus.interviewScheduled &&
+                        application.interviewDate != null)
+                      _InterviewDetailsCard(application: application)
+                    else
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Applied on ${DateFormat('MMM dd, yyyy').format(application.appliedDate)}',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          );
   }
 }
 
@@ -182,9 +182,9 @@ class _InterviewDetailsCard extends StatelessWidget {
               Text(
                 'Interview Scheduled',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade700,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade700,
+                ),
               ),
             ],
           ),
@@ -192,8 +192,9 @@ class _InterviewDetailsCard extends StatelessWidget {
           _InterviewInfoRow(
             icon: Icons.calendar_today,
             label: 'Date',
-            value: DateFormat('EEEE, MMMM dd, yyyy')
-                .format(application.interviewDate!),
+            value: DateFormat(
+              'EEEE, MMMM dd, yyyy',
+            ).format(application.interviewDate!),
           ),
           if (application.interviewTime != null) ...[
             const SizedBox(height: 12),
@@ -303,4 +304,3 @@ class _InterviewInfoRow extends StatelessWidget {
     );
   }
 }
-

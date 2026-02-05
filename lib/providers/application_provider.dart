@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/application_model.dart';
 import '../models/user_model.dart';
+import '../services/firebase_database_service.dart';
 
 class ApplicationProvider with ChangeNotifier {
   final List<Application> _applications = [];
@@ -11,6 +12,30 @@ class ApplicationProvider with ChangeNotifier {
 
   List<Application> getApplicationsByJob(String jobId) {
     return _applications.where((a) => a.jobId == jobId).toList();
+  }
+
+  Future<void> loadApplications() async {
+    if (_isLoading) return;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final firebaseService = FirebaseDatabaseService(); // Get instance
+      final appsData = await firebaseService.getApplications();
+      _applications.clear();
+      for (var data in appsData) {
+        try {
+          _applications.add(Application.fromJson(data));
+        } catch (e) {
+          print('Error parsing application: $e');
+        }
+      }
+    } catch (e) {
+      print('Error loading applications: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   List<Application> getApplicationsByCandidate(String candidateId) {
@@ -131,4 +156,3 @@ class ApplicationProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-

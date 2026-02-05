@@ -22,7 +22,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final user = await _databaseService.loginUser(email, password, role);
-      
+
       if (user != null) {
         _currentUser = user;
         _isLoading = false;
@@ -51,7 +51,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final user = await _databaseService.loginAdmin(email, password);
-      
+
       if (user != null) {
         _currentUser = user;
         _isLoading = false;
@@ -134,5 +134,24 @@ class AuthProvider with ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
-}
 
+  // Fetch all HRs (for Admin)
+  Future<List<User>> fetchHRs() async {
+    try {
+      return await _databaseService.getAllHRs();
+    } catch (e) {
+      print('Error fetching HRs: $e');
+      return [];
+    }
+  }
+
+  // Fetch all Candidates (for Admin)
+  Future<List<User>> fetchCandidates() async {
+    try {
+      return await _databaseService.getAllCandidates();
+    } catch (e) {
+      print('Error fetching Candidates: $e');
+      return [];
+    }
+  }
+}

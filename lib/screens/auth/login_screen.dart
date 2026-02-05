@@ -52,17 +52,18 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success) {
       final user = authProvider.currentUser;
       if (user != null) {
-        Navigator.of(context).pushReplacement(
+        Navigator.of(context).pushAndRemoveUntil(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 user.role == UserRole.hr
-                    ? const HRDashboardScreen()
-                    : const CandidateHomeScreen(),
+                ? const HRDashboardScreen()
+                : const CandidateHomeScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+                  return FadeTransition(opacity: animation, child: child);
+                },
           ),
+          (route) => false,
         );
       }
     } else {
@@ -89,10 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              AppTheme.primaryColor.withOpacity(0.03),
-            ],
+            colors: [Colors.white, AppTheme.primaryColor.withOpacity(0.03)],
           ),
         ),
         child: SafeArea(
@@ -131,8 +129,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Welcome Back',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -142,8 +140,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Sign in to continue',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
+                        color: AppTheme.textSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -191,7 +189,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : Icons.visibility_off,
                           ),
                           onPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
+                            setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            );
                           },
                         ),
                         filled: true,
@@ -229,18 +229,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.push(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) =>
-                                RegisterScreen(role: widget.role),
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    RegisterScreen(role: widget.role),
                             transitionsBuilder:
-                                (context, animation, secondaryAnimation, child) {
-                              return SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(1.0, 0.0),
-                                  end: Offset.zero,
-                                ).animate(animation),
-                                child: child,
-                              );
-                            },
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  return SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(1.0, 0.0),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  );
+                                },
                           ),
                         );
                       },
@@ -256,4 +262,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

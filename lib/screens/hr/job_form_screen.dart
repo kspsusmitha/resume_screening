@@ -81,6 +81,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
       hrId: authProvider.currentUser?.id ?? '',
       hrName: authProvider.currentUser?.name ?? 'HR Manager',
       isActive: _isActive,
+      isApproved: widget.job?.isApproved ?? false, // Preserve approval status
     );
 
     if (widget.job != null) {
@@ -96,9 +97,11 @@ class _JobFormScreenState extends State<JobFormScreen> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(widget.job != null
-            ? 'Job updated successfully'
-            : 'Job created successfully'),
+        content: Text(
+          widget.job != null
+              ? 'Job updated successfully'
+              : 'Job created successfully',
+        ),
       ),
     );
   }
@@ -236,4 +239,3 @@ class _JobFormScreenState extends State<JobFormScreen> {
     );
   }
 }
-

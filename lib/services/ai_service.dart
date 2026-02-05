@@ -6,14 +6,11 @@ import '../models/interview_model.dart' show QuestionAnswer;
 class AIService {
   static const String _apiKey = 'AIzaSyChcxUCymMoKzf9ckJNJMRgw_oAlTPnYCs';
   static const String _modelName = 'gemini-flash-lite-latest';
-  
+
   late final GenerativeModel _model;
 
   AIService() {
-    _model = GenerativeModel(
-      model: _modelName,
-      apiKey: _apiKey,
-    );
+    _model = GenerativeModel(model: _modelName, apiKey: _apiKey);
   }
 
   Future<String> generateText(String prompt) async {
@@ -32,7 +29,8 @@ class AIService {
     required List<String> requiredSkills,
   }) async {
     try {
-      final prompt = '''
+      final prompt =
+          '''
 Analyze the following resume and job description, then provide a detailed screening result in JSON format.
 
 Resume:
@@ -57,7 +55,7 @@ Only return the JSON, no additional text.
 ''';
 
       final response = await generateText(prompt);
-      
+
       // Try to extract JSON from response
       String jsonStr = response.trim();
       if (jsonStr.startsWith('```json')) {
@@ -72,7 +70,7 @@ Only return the JSON, no additional text.
       jsonStr = jsonStr.trim();
 
       final jsonData = json.decode(jsonStr) as Map<String, dynamic>;
-      
+
       return ResumeScreeningResult.fromJson(jsonData);
     } catch (e) {
       // Fallback result if parsing fails
@@ -93,7 +91,8 @@ Only return the JSON, no additional text.
     required List<String> experience,
     required String? education,
   }) async {
-    final prompt = '''
+    final prompt =
+        '''
 Generate a professional resume summary (3-4 sentences) for a candidate with the following information:
 
 Name: $name
@@ -115,7 +114,8 @@ Create an impactful, detailed professional summary that elaborates on qualificat
   }
 
   Future<String> improveResumeBulletPoint(String bulletPoint) async {
-    final prompt = '''
+    final prompt =
+        '''
 Transform the following resume bullet point into a detailed, professional description. 
 
 If it contains only keywords or short phrases, ELABORATE them into full sentences:
@@ -133,7 +133,8 @@ Return only the improved, elaborated bullet point (1-2 sentences), no additional
   }
 
   Future<String> checkGrammarAndSpelling(String text) async {
-    final prompt = '''
+    final prompt =
+        '''
 Check and correct the grammar and spelling in the following text. Return only the corrected text:
 
 "$text"
@@ -148,7 +149,8 @@ Check and correct the grammar and spelling in the following text. Return only th
     required List<String> keySkills,
     required String? experience,
   }) async {
-    final prompt = '''
+    final prompt =
+        '''
 Generate a professional 60-90 second video resume script for a candidate applying for $jobTitle.
 
 Candidate Name: $name
@@ -172,7 +174,8 @@ Return only the script text, formatted for easy reading.
     required String jobTitle,
     required int numberOfQuestions,
   }) async {
-    final prompt = '''
+    final prompt =
+        '''
 Generate $numberOfQuestions interview questions for a $jobTitle position in the $domain domain.
 
 Return the questions as a JSON array of strings:
@@ -183,7 +186,7 @@ Only return the JSON array, no additional text.
 
     try {
       final response = await generateText(prompt);
-      
+
       String jsonStr = response.trim();
       if (jsonStr.startsWith('```json')) {
         jsonStr = jsonStr.substring(7);
@@ -215,7 +218,8 @@ Only return the JSON array, no additional text.
     required String answer,
     required String domain,
   }) async {
-    final prompt = '''
+    final prompt =
+        '''
 Evaluate the following interview answer and provide detailed feedback in JSON format.
 
 Question: $question
@@ -235,7 +239,7 @@ Only return the JSON, no additional text.
 
     try {
       final response = await generateText(prompt);
-      
+
       String jsonStr = response.trim();
       if (jsonStr.startsWith('```json')) {
         jsonStr = jsonStr.substring(7);
@@ -249,7 +253,7 @@ Only return the JSON, no additional text.
       jsonStr = jsonStr.trim();
 
       final jsonData = json.decode(jsonStr) as Map<String, dynamic>;
-      
+
       return QuestionAnswer(
         question: question,
         answer: answer,
@@ -273,5 +277,67 @@ Only return the JSON, no additional text.
       );
     }
   }
-}
 
+  Future<Map<String, String>> generateLinkedInStyleProfile({
+    required String fullName,
+    required String currentRole,
+    required String experienceLevel,
+    required List<String> topSkills,
+    required String educationSummary,
+    required String industry,
+    String? careerGoal,
+  }) async {
+    final prompt =
+        '''
+You are creating a LinkedIn-style professional profile from minimal data.
+
+USER INPUT:
+- Name: $fullName
+- Current Role: $currentRole
+- Experience Level: $experienceLevel
+- Top Skills: ${topSkills.join(', ')}
+- Education: $educationSummary
+- Industry / Domain: $industry
+- Career Goal: ${careerGoal ?? 'Not specified'}
+
+TASK:
+1. Create a short LINKEDIN HEADLINE (max 120 characters).
+2. Create an ABOUT / SUMMARY section (2–3 short paragraphs).
+3. Create a CURRENT EXPERIENCE section with 3–5 bullet points.
+   - Use only the given info (do NOT invent company names if not provided).
+   - Use action verbs and measurable impact where reasonable.
+4. Create a SKILLS section as a comma-separated list, expanding the keywords into professional-looking skill names.
+
+RESPONSE FORMAT (STRICT JSON, no extra text):
+
+{
+  "headline": "...",
+  "summary": "...",
+  "experience": "...",
+  "skills": "..."
+}
+''';
+
+    final raw = await generateText(prompt);
+
+    String jsonStr = raw.trim();
+    if (jsonStr.startsWith('```json')) {
+      jsonStr = jsonStr.substring(7);
+    }
+    if (jsonStr.startsWith('```')) {
+      jsonStr = jsonStr.substring(3);
+    }
+    if (jsonStr.endsWith('```')) {
+      jsonStr = jsonStr.substring(0, jsonStr.length - 3);
+    }
+    jsonStr = jsonStr.trim();
+
+    final data = json.decode(jsonStr) as Map<String, dynamic>;
+    return {
+      'headline': data['headline']?.toString() ?? '',
+      'summary': data['summary']?.toString() ?? '',
+      'experience': data['experience']?.toString() ?? '',
+      'skills': data['skills']?.toString() ?? '',
+    };
+  }
+}

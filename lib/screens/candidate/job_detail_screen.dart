@@ -22,136 +22,102 @@ class JobDetailScreen extends StatefulWidget {
 class _JobDetailScreenState extends State<JobDetailScreen> {
   bool _isApplying = false;
   final _storageService = StorageService();
-  String? _videoResumeUrl;
 
-  Future<void> _pickVideoResume() async {
+  PlatformFile? _pickedFile;
+
+  Future<void> _pickResume() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.video,
-        allowMultiple: false,
-      );
-
-      if (result != null) {
-        final file = result.files.single;
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        final userId = authProvider.currentUser?.id ?? 'unknown';
-        final fileName = 'video_resume_${DateTime.now().millisecondsSinceEpoch}.${file.extension ?? 'mp4'}';
-
-        String? videoUrl;
-
-        if (kIsWeb) {
-          if (file.bytes != null) {
-            videoUrl = await _storageService.uploadVideoFromBytes(
-              userId: userId,
-              bytes: file.bytes!,
-              fileName: fileName,
-            );
-          }
-        } else {
-          if (file.path != null) {
-            videoUrl = await _storageService.uploadVideoResumeFromPath(
-              userId: userId,
-              filePath: file.path!,
-              fileName: fileName,
-            );
-          }
-        }
-
-        if (videoUrl != null) {
-          setState(() {
-            _videoResumeUrl = videoUrl;
-          });
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Video resume attached!')),
-          );
-        }
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error uploading video: $e')),
-      );
-    }
-  }
-
-  Future<void> _applyForJob() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final applicationProvider =
-        Provider.of<ApplicationProvider>(context, listen: false);
-
-    setState(() => _isApplying = true);
-
-    try {
-      // Pick resume file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx', 'txt'],
       );
 
       if (result != null) {
-        final file = result.files.single;
-        String? resumeUrl;
-        String resumeText = file.name;
-
-        // Upload file to Firebase Storage
-        final userId = authProvider.currentUser?.id ?? 'unknown';
-        final fileName = 'resume_${DateTime.now().millisecondsSinceEpoch}.${file.extension ?? 'pdf'}';
-        
-        if (kIsWeb) {
-          // For web, upload from bytes
-          if (file.bytes != null) {
-            resumeUrl = await _storageService.uploadResumeFromBytes(
-              userId: userId,
-              bytes: file.bytes!,
-              fileName: fileName,
-            );
-          }
-        } else {
-          // For mobile/desktop, upload from file path
-          if (file.path != null) {
-            resumeUrl = await _storageService.uploadResumeFromPath(
-              userId: userId,
-              filePath: file.path!,
-              fileName: fileName,
-            );
-          }
-        }
-
-        final application = Application(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          jobId: widget.job.id,
-          candidateId: authProvider.currentUser?.id ?? '',
-          candidateName: authProvider.currentUser?.name ?? 'Candidate',
-          candidateEmail: authProvider.currentUser?.email ?? '',
-          resumePath: resumeUrl ?? file.path ?? '',
-          resumeText: resumeText,
-          videoResumePath: _videoResumeUrl,
-          status: ApplicationStatus.applied,
-        );
-
-        await applicationProvider.createApplication(application);
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Application submitted successfully!'),
-            backgroundColor: AppTheme.accentColor,
-          ),
-        );
-        Navigator.pop(context);
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a resume file')),
-        );
+        setState(() {
+          _pickedFile = result.files.single;
+        });
       }
     } catch (e) {
       if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking resume: $e')));
+    }
+  }
+
+  Future<void> _applyForJob() async {
+    if (_pickedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error applying: $e')),
+        const SnackBar(content: Text('Please upload a resume first')),
       );
+      return;
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final applicationProvider = Provider.of<ApplicationProvider>(
+      context,
+      listen: false,
+    );
+
+    setState(() => _isApplying = true);
+
+    try {
+      final file = _pickedFile!;
+      String? resumeUrl;
+      String resumeText = file.name;
+
+      // Upload file to Firebase Storage
+      final userId = authProvider.currentUser?.id ?? 'unknown';
+      final fileName =
+          'resume_${DateTime.now().millisecondsSinceEpoch}.${file.extension ?? 'pdf'}';
+
+      if (kIsWeb) {
+        // For web, upload from bytes
+        if (file.bytes != null) {
+          resumeUrl = await _storageService.uploadResumeFromBytes(
+            userId: userId,
+            bytes: file.bytes!,
+            fileName: fileName,
+          );
+        }
+      } else {
+        // For mobile/desktop, upload from file path
+        if (file.path != null) {
+          resumeUrl = await _storageService.uploadResumeFromPath(
+            userId: userId,
+            filePath: file.path!,
+            fileName: fileName,
+          );
+        }
+      }
+
+      final application = Application(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        jobId: widget.job.id,
+        candidateId: authProvider.currentUser?.id ?? '',
+        candidateName: authProvider.currentUser?.name ?? 'Candidate',
+        candidateEmail: authProvider.currentUser?.email ?? '',
+        resumePath: resumeUrl ?? file.path ?? '',
+        resumeText: resumeText,
+        status: ApplicationStatus.applied,
+      );
+
+      await applicationProvider.createApplication(application);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Application submitted successfully!'),
+          backgroundColor: AppTheme.accentColor,
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error applying: $e')));
     }
 
     setState(() => _isApplying = false);
@@ -160,9 +126,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Job Details'),
-      ),
+      appBar: AppBar(title: const Text('Job Details')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -182,9 +146,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               Text(
                 widget.job.salaryRange!,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.accentColor,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: AppTheme.accentColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
             const SizedBox(height: 24),
@@ -256,34 +220,41 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (_videoResumeUrl == null)
+              if (_pickedFile == null)
                 OutlinedButton.icon(
-                  onPressed: _pickVideoResume,
-                  icon: const Icon(Icons.video_library),
-                  label: const Text('Attach Video Resume (Optional)'),
+                  onPressed: _pickResume,
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Upload Resume (PDF/DOC)'),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 48),
+                    side: const BorderSide(color: AppTheme.primaryColor),
                   ),
                 )
               else
                 Card(
-                  color: AppTheme.accentColor.withOpacity(0.1),
+                  color: Colors.green.withOpacity(0.1),
                   child: ListTile(
-                    leading: const Icon(Icons.check_circle, color: AppTheme.accentColor),
-                    title: const Text('Video Resume Attached'),
+                    leading: const Icon(Icons.description, color: Colors.green),
+                    title: Text(
+                      _pickedFile!.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: () {
                         setState(() {
-                          _videoResumeUrl = null;
+                          _pickedFile = null;
                         });
                       },
                     ),
                   ),
                 ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: _isApplying ? null : _applyForJob,
+                onPressed: _isApplying || _pickedFile == null
+                    ? null
+                    : _applyForJob,
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                 ),
@@ -302,4 +273,3 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     );
   }
 }
-

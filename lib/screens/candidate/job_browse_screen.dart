@@ -18,8 +18,10 @@ class _JobBrowseScreenState extends State<JobBrowseScreen> {
   void initState() {
     super.initState();
     _searchController.addListener(() {
-      Provider.of<JobProvider>(context, listen: false)
-          .setSearchQuery(_searchController.text);
+      Provider.of<JobProvider>(
+        context,
+        listen: false,
+      ).setSearchQuery(_searchController.text);
     });
   }
 
@@ -35,9 +37,7 @@ class _JobBrowseScreenState extends State<JobBrowseScreen> {
     final filteredJobs = jobProvider.filteredJobs;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Browse Jobs'),
-      ),
+      appBar: AppBar(title: const Text('Browse Jobs'), elevation: 0),
       body: Column(
         children: [
           Padding(
@@ -47,6 +47,12 @@ class _JobBrowseScreenState extends State<JobBrowseScreen> {
               decoration: InputDecoration(
                 hintText: 'Search jobs...',
                 prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
@@ -64,7 +70,11 @@ class _JobBrowseScreenState extends State<JobBrowseScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No jobs found',
@@ -97,4 +107,3 @@ class _JobBrowseScreenState extends State<JobBrowseScreen> {
     );
   }
 }
-

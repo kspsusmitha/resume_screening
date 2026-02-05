@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/job_model.dart';
@@ -11,10 +12,14 @@ class JobProvider with ChangeNotifier {
   String? _filterLocation;
   final FirebaseDatabaseService _databaseService = FirebaseDatabaseService();
   DatabaseReference? _jobsRef;
+  StreamSubscription<DatabaseEvent>? _jobsSubscription;
 
   List<Job> get jobs => _jobs;
   List<Job> get activeJobs =>
-      _jobs.where((job) => job.isActive).toList();
+      _jobs.where((job) => job.isActive && job.isApproved).toList();
+
+  List<Job> get pendingApprovalJobs =>
+      _jobs.where((job) => !job.isApproved).toList();
   bool get isLoading => _isLoading;
   String? get searchQuery => _searchQuery;
   String? get filterDomain => _filterDomain;
@@ -34,13 +39,18 @@ class JobProvider with ChangeNotifier {
 
     if (_filterDomain != null && _filterDomain!.isNotEmpty) {
       filtered = filtered
-          .where((job) => job.domain.toLowerCase() == _filterDomain!.toLowerCase())
+          .where(
+            (job) => job.domain.toLowerCase() == _filterDomain!.toLowerCase(),
+          )
           .toList();
     }
 
     if (_filterLocation != null && _filterLocation!.isNotEmpty) {
       filtered = filtered
-          .where((job) => job.location.toLowerCase() == _filterLocation!.toLowerCase())
+          .where(
+            (job) =>
+                job.location.toLowerCase() == _filterLocation!.toLowerCase(),
+          )
           .toList();
     }
 
@@ -49,8 +59,12 @@ class JobProvider with ChangeNotifier {
 
   /// Initialize and load jobs from Firebase Realtime Database
   Future<void> loadJobs() async {
+    // If we already have a subscription, we might not need to reload everything,
+    // but for safety/consistency with the current call pattern, we'll proceed.
+    // Ideally, we check if subscription is paused or null.
+
     if (_isLoading) return;
-    
+
     _isLoading = true;
     notifyListeners();
 
@@ -58,7 +72,7 @@ class JobProvider with ChangeNotifier {
       // Load initial jobs
       final jobsData = await _databaseService.getJobs();
       _jobs.clear();
-      
+
       for (var jobData in jobsData) {
         try {
           final job = Job.fromJson(jobData);
@@ -82,10 +96,10 @@ class JobProvider with ChangeNotifier {
 
   /// Set up real-time listener for job updates
   void _setupRealtimeListener() {
-    _jobsRef?.onDisconnect();
+    _jobsSubscription?.cancel();
     _jobsRef = _databaseService.getJobsStream();
-    
-    _jobsRef?.onValue.listen((event) {
+
+    _jobsSubscription = _jobsRef?.onValue.listen((event) {
       if (event.snapshot.value == null) {
         _jobs.clear();
         notifyListeners();
@@ -97,7 +111,9 @@ class JobProvider with ChangeNotifier {
 
       for (var entry in data.entries) {
         try {
-          final jobData = Map<String, dynamic>.from(entry.value as Map<dynamic, dynamic>);
+          final jobData = Map<String, dynamic>.from(
+            entry.value as Map<dynamic, dynamic>,
+          );
           final job = Job.fromJson(jobData);
           _jobs.add(job);
         } catch (e) {
@@ -112,7 +128,7 @@ class JobProvider with ChangeNotifier {
   /// Dispose real-time listener
   @override
   void dispose() {
-    _jobsRef?.onDisconnect();
+    _jobsSubscription?.cancel();
     super.dispose();
   }
 
@@ -144,14 +160,11 @@ class JobProvider with ChangeNotifier {
 
     try {
       final jobData = job.toJson();
+      jobData['isApproved'] = false; // HR cannot approve directly
       final jobId = await _databaseService.createJob(jobData);
-      
+
       if (jobId != null) {
         // Job will be added via real-time listener
-        // But we can also add it locally for immediate UI update
-        final newJob = Job.fromJson({...jobData, 'id': jobId});
-        _jobs.add(newJob);
-        notifyListeners();
       } else {
         throw Exception('Failed to create job');
       }
@@ -170,24 +183,18 @@ class JobProvider with ChangeNotifier {
 
     try {
       final jobData = updatedJob.toJson();
-      // Remove id and createdAt from update data (they shouldn't be updated)
+      // HR cannot change isApproved status directly
       jobData.remove('id');
       jobData.remove('createdAt');
       jobData['updatedAt'] = DateTime.now().toIso8601String();
 
       final success = await _databaseService.updateJob(updatedJob.id, jobData);
-      
+
       if (!success) {
         throw Exception('Failed to update job');
       }
-      
+
       // Job will be updated via real-time listener
-      // But we can also update locally for immediate UI update
-      final index = _jobs.indexWhere((j) => j.id == updatedJob.id);
-      if (index != -1) {
-        _jobs[index] = updatedJob;
-        notifyListeners();
-      }
     } catch (e) {
       print('Error updating job: $e');
       rethrow;
@@ -203,15 +210,12 @@ class JobProvider with ChangeNotifier {
 
     try {
       final success = await _databaseService.deleteJob(jobId);
-      
+
       if (!success) {
         throw Exception('Failed to delete job');
       }
-      
+
       // Job will be removed via real-time listener
-      // But we can also remove locally for immediate UI update
-      _jobs.removeWhere((j) => j.id == jobId);
-      notifyListeners();
     } catch (e) {
       print('Error deleting job: $e');
       rethrow;
@@ -233,4 +237,3 @@ class JobProvider with ChangeNotifier {
     return _jobs.where((j) => j.hrId == hrId).toList();
   }
 }
-
