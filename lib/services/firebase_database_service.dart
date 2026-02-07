@@ -2,7 +2,8 @@ import 'package:firebase_database/firebase_database.dart';
 import '../models/user_model.dart';
 
 class FirebaseDatabaseService {
-  static final FirebaseDatabaseService _instance = FirebaseDatabaseService._internal();
+  static final FirebaseDatabaseService _instance =
+      FirebaseDatabaseService._internal();
   factory FirebaseDatabaseService() => _instance;
   FirebaseDatabaseService._internal();
 
@@ -32,7 +33,7 @@ class FirebaseDatabaseService {
     try {
       // Determine the correct branch based on role
       final branch = _getUserBranch(role);
-      
+
       // Check if user already exists in the appropriate branch
       final emailSnapshot = await _database
           .child(branch)
@@ -89,7 +90,7 @@ class FirebaseDatabaseService {
     try {
       // Determine the correct branch based on role
       final branch = _getUserBranch(role);
-      
+
       // Query the appropriate branch
       final snapshot = await _database
           .child(branch)
@@ -103,7 +104,7 @@ class FirebaseDatabaseService {
 
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       final userEntry = data.values.first as Map<dynamic, dynamic>;
-      
+
       // Check password
       if (userEntry['password'] != password) {
         return null;
@@ -113,7 +114,7 @@ class FirebaseDatabaseService {
       final userRole = UserRole.values.firstWhere(
         (e) => e.toString().split('.').last == userEntry['role'],
       );
-      
+
       if (userRole != role) {
         return null;
       }
@@ -154,7 +155,7 @@ class FirebaseDatabaseService {
             'createdAt': DateTime.now().toIso8601String(),
           };
           await _database.child('users').child(adminId).set(adminData);
-          
+
           return User.fromJson(Map<String, dynamic>.from(adminData));
         } else {
           final data = adminSnapshot.snapshot.value as Map<dynamic, dynamic>;
@@ -173,7 +174,7 @@ class FirebaseDatabaseService {
     try {
       // Determine the correct branch based on role
       final branch = _getUserBranch(role);
-      
+
       final snapshot = await _database.child(branch).child(userId).once();
       if (snapshot.snapshot.value == null) {
         return null;
@@ -232,7 +233,9 @@ class FirebaseDatabaseService {
       }
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       return data.entries.map((entry) {
-        final userData = Map<String, dynamic>.from(entry.value as Map<dynamic, dynamic>);
+        final userData = Map<String, dynamic>.from(
+          entry.value as Map<dynamic, dynamic>,
+        );
         return User.fromJson(userData);
       }).toList();
     } catch (e) {
@@ -249,7 +252,9 @@ class FirebaseDatabaseService {
       }
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       return data.entries.map((entry) {
-        final userData = Map<String, dynamic>.from(entry.value as Map<dynamic, dynamic>);
+        final userData = Map<String, dynamic>.from(
+          entry.value as Map<dynamic, dynamic>,
+        );
         return User.fromJson(userData);
       }).toList();
     } catch (e) {
@@ -258,7 +263,11 @@ class FirebaseDatabaseService {
   }
 
   // Update user data (works with any branch)
-  Future<bool> updateUser(String userId, UserRole role, Map<String, dynamic> updates) async {
+  Future<bool> updateUser(
+    String userId,
+    UserRole role,
+    Map<String, dynamic> updates,
+  ) async {
     try {
       final branch = _getUserBranch(role);
       await _database.child(branch).child(userId).update(updates);
@@ -300,7 +309,9 @@ class FirebaseDatabaseService {
       }
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       return data.entries.map((entry) {
-        final jobData = Map<String, dynamic>.from(entry.value as Map<dynamic, dynamic>);
+        final jobData = Map<String, dynamic>.from(
+          entry.value as Map<dynamic, dynamic>,
+        );
         return jobData;
       }).toList();
     } catch (e) {
@@ -341,7 +352,9 @@ class FirebaseDatabaseService {
   }
 
   // Application operations
-  Future<String?> createApplication(Map<String, dynamic> applicationData) async {
+  Future<String?> createApplication(
+    Map<String, dynamic> applicationData,
+  ) async {
     try {
       final appId = _database.child('applications').push().key!;
       applicationData['id'] = appId;
@@ -354,21 +367,24 @@ class FirebaseDatabaseService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getApplications({String? jobId, String? candidateId}) async {
+  Future<List<Map<String, dynamic>>> getApplications({
+    String? jobId,
+    String? candidateId,
+  }) async {
     try {
       Query query = _database.child('applications');
-      
+
       if (jobId != null) {
         query = query.orderByChild('jobId').equalTo(jobId);
       } else if (candidateId != null) {
         query = query.orderByChild('candidateId').equalTo(candidateId);
       }
-      
+
       final snapshot = await query.once();
       if (snapshot.snapshot.value == null) {
         return [];
       }
-      
+
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       return data.entries.map((entry) {
         return Map<String, dynamic>.from(entry.value as Map<dynamic, dynamic>);
@@ -378,9 +394,15 @@ class FirebaseDatabaseService {
     }
   }
 
-  Future<bool> updateApplication(String applicationId, Map<String, dynamic> updates) async {
+  Future<bool> updateApplication(
+    String applicationId,
+    Map<String, dynamic> updates,
+  ) async {
     try {
-      await _database.child('applications').child(applicationId).update(updates);
+      await _database
+          .child('applications')
+          .child(applicationId)
+          .update(updates);
       return true;
     } catch (e) {
       return false;
@@ -388,7 +410,10 @@ class FirebaseDatabaseService {
   }
 
   // Resume operations
-  Future<String?> saveResume(String userId, Map<String, dynamic> resumeData) async {
+  Future<String?> saveResume(
+    String userId,
+    Map<String, dynamic> resumeData,
+  ) async {
     try {
       final resumeId = _database.child('resumes').push().key!;
       resumeData['id'] = resumeId;
@@ -408,11 +433,11 @@ class FirebaseDatabaseService {
           .orderByChild('userId')
           .equalTo(userId)
           .once();
-      
+
       if (snapshot.snapshot.value == null) {
         return [];
       }
-      
+
       final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
       return data.entries.map((entry) {
         return Map<String, dynamic>.from(entry.value as Map<dynamic, dynamic>);
@@ -429,8 +454,48 @@ class FirebaseDatabaseService {
 
   Query getApplicationsStream({String? jobId}) {
     if (jobId != null) {
-      return _database.child('applications').orderByChild('jobId').equalTo(jobId);
+      return _database
+          .child('applications')
+          .orderByChild('jobId')
+          .equalTo(jobId);
     }
     return _database.child('applications');
+  }
+
+  // Notification operations
+  Future<String?> createNotification(
+    Map<String, dynamic> notificationData,
+  ) async {
+    try {
+      final notificationId = _database.child('notifications').push().key!;
+      notificationData['id'] = notificationId;
+      notificationData['timestamp'] = DateTime.now().toIso8601String();
+      notificationData['isRead'] = false;
+      await _database
+          .child('notifications')
+          .child(notificationId)
+          .set(notificationData);
+      return notificationId;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Query getUserNotifications(String userId) {
+    return _database
+        .child('notifications')
+        .orderByChild('userId')
+        .equalTo(userId);
+  }
+
+  Future<bool> markNotificationAsRead(String notificationId) async {
+    try {
+      await _database.child('notifications').child(notificationId).update({
+        'isRead': true,
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

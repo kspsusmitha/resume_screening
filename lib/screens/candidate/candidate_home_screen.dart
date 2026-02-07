@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/job_provider.dart';
+import '../../providers/application_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/fade_in_widget.dart';
-import '../../widgets/slide_in_widget.dart';
+import '../../widgets/glass_container.dart';
 import 'job_browse_screen.dart';
 import 'my_applications_screen.dart';
+import 'notifications_screen.dart';
 import '../resume_builder_screen.dart';
 import '../interview_preparation_screen.dart';
 import '../video_resume_screen.dart';
@@ -27,6 +30,10 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<JobProvider>(context, listen: false).loadJobs();
+      Provider.of<ApplicationProvider>(
+        context,
+        listen: false,
+      ).loadApplications();
     });
   }
 
@@ -36,17 +43,63 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
     final user = authProvider.currentUser;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           _selectedIndex == 0
               ? 'Job Portal'
               : _selectedIndex == 1
               ? 'My Applications'
               : 'Profile',
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, child) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications, color: Colors.white),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (notificationProvider.unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 14,
+                          minHeight: 14,
+                        ),
+                        child: Text(
+                          '${notificationProvider.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
               authProvider.logout();
               Navigator.of(context).pushReplacementNamed('/');
@@ -54,11 +107,47 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
           ),
         ],
       ),
-      body: _selectedIndex == 0
-          ? _buildHome(user)
-          : _selectedIndex == 1
-          ? const MyApplicationsScreen()
-          : _buildProfile(user),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.network(
+              'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop',
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(color: AppTheme.backgroundColor);
+              },
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: AppTheme.backgroundColor),
+            ),
+          ),
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.white.withOpacity(0.9),
+                  ],
+                  stops: const [0.0, 0.4],
+                ),
+              ),
+            ),
+          ),
+          // Content
+          SafeArea(
+            child: _selectedIndex == 0
+                ? _buildHome(user)
+                : _selectedIndex == 1
+                ? const MyApplicationsScreen()
+                : _buildProfile(user),
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
@@ -83,43 +172,29 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
         children: [
           FadeInWidget(
             delay: const Duration(milliseconds: 100),
-            child: SlideInWidget(
-              direction: SlideDirection.top,
-              delay: const Duration(milliseconds: 100),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primaryColor.withOpacity(0.1),
-                        AppTheme.secondaryColor.withOpacity(0.05),
-                      ],
+            child: GlassContainer(
+              opacity: 0.1,
+              blur: 10,
+              padding: const EdgeInsets.all(20),
+              color: AppTheme.primaryColor,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome, ${user?.name ?? 'Candidate'}!',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
                     ),
                   ),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Welcome, ${user?.name ?? 'Candidate'}!',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Ready to find your dream job?',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  Text(
+                    'Ready to find your dream job?',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -142,8 +217,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
             mainAxisSpacing: 16,
             childAspectRatio: 1.1,
             children: [
-              SlideInWidget(
-                direction: SlideDirection.left,
+              FadeInWidget(
                 delay: const Duration(milliseconds: 300),
                 child: _ActionCard(
                   title: 'Browse Jobs',
@@ -159,8 +233,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                   },
                 ),
               ),
-              SlideInWidget(
-                direction: SlideDirection.right,
+              FadeInWidget(
                 delay: const Duration(milliseconds: 400),
                 child: _ActionCard(
                   title: 'Build Resume',
@@ -184,8 +257,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                   },
                 ),
               ),
-              SlideInWidget(
-                direction: SlideDirection.left,
+              FadeInWidget(
                 delay: const Duration(milliseconds: 450),
                 child: _ActionCard(
                   title: 'My Resumes',
@@ -209,8 +281,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                   },
                 ),
               ),
-              SlideInWidget(
-                direction: SlideDirection.right,
+              FadeInWidget(
                 delay: const Duration(milliseconds: 550),
                 child: _ActionCard(
                   title: 'Interview Prep',
@@ -234,8 +305,7 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
                   },
                 ),
               ),
-              SlideInWidget(
-                direction: SlideDirection.left,
+              FadeInWidget(
                 delay: const Duration(milliseconds: 600),
                 child: _ActionCard(
                   title: 'Video Resume',
@@ -271,28 +341,29 @@ class _CandidateHomeScreenState extends State<CandidateHomeScreen> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppTheme.primaryColor,
-                    child: Text(
-                      user?.name[0].toUpperCase() ?? 'C',
-                      style: const TextStyle(fontSize: 32, color: Colors.white),
-                    ),
+          GlassContainer(
+            opacity: 0.6,
+            blur: 10,
+            padding: const EdgeInsets.all(20),
+            color: Colors.white,
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: AppTheme.primaryColor,
+                  child: Text(
+                    user?.name[0].toUpperCase() ?? 'C',
+                    style: const TextStyle(fontSize: 32, color: Colors.white),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.name ?? 'Candidate',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(user?.email ?? ''),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  user?.name ?? 'Candidate',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(user?.email ?? ''),
+              ],
             ),
           ),
         ],
@@ -354,50 +425,35 @@ class _ActionCardState extends State<_ActionCard>
         builder: (context, child) {
           return Transform.scale(
             scale: 1.0 + (_controller.value * 0.05),
-            child: Card(
-              elevation: _isHovered ? 8 : 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: InkWell(
-                onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: _isHovered
-                        ? LinearGradient(
-                            colors: [
-                              widget.color.withOpacity(0.2),
-                              widget.color.withOpacity(0.1),
-                            ],
-                          )
-                        : null,
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: widget.color.withOpacity(0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(widget.icon, color: widget.color, size: 32),
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: GlassContainer(
+                opacity: _isHovered ? 0.8 : 0.6,
+                blur: 8,
+                padding: const EdgeInsets.all(20),
+                color: Colors.white,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: widget.color.withOpacity(0.15),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        widget.title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: _isHovered ? widget.color : null,
-                            ),
-                        textAlign: TextAlign.center,
+                      child: Icon(widget.icon, color: widget.color, size: 32),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: _isHovered ? widget.color : null,
                       ),
-                    ],
-                  ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),

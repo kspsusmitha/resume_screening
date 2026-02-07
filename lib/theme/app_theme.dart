@@ -22,7 +22,10 @@ class AppTheme {
         surface: surfaceColor,
         background: backgroundColor,
       ),
-      scaffoldBackgroundColor: backgroundColor,
+      scaffoldBackgroundColor: const Color(
+        0xFFF3F4F6,
+      ), // Slightly darker for glass contrast
+
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
@@ -36,32 +39,23 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: surfaceColor,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           side: const BorderSide(color: primaryColor),
           foregroundColor: primaryColor,
         ),
@@ -85,7 +79,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: errorColor),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
@@ -113,16 +110,9 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          color: textPrimary,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          color: textSecondary,
-        ),
+        bodyLarge: TextStyle(fontSize: 16, color: textPrimary),
+        bodyMedium: TextStyle(fontSize: 14, color: textSecondary),
       ),
     );
   }
 }
-

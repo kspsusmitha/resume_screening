@@ -3,11 +3,15 @@ import 'package:provider/provider.dart';
 import '../../providers/job_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/job_model.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/fade_in_widget.dart';
+import '../../widgets/glass_container.dart';
 
 class JobFormScreen extends StatefulWidget {
   final Job? job;
+  final bool isCreating;
 
-  const JobFormScreen({super.key, this.job});
+  const JobFormScreen({super.key, this.job, this.isCreating = false});
 
   @override
   State<JobFormScreen> createState() => _JobFormScreenState();
@@ -81,7 +85,9 @@ class _JobFormScreenState extends State<JobFormScreen> {
       hrId: authProvider.currentUser?.id ?? '',
       hrName: authProvider.currentUser?.name ?? 'HR Manager',
       isActive: _isActive,
-      isApproved: widget.job?.isApproved ?? false, // Preserve approval status
+      // If we are editing, preserve status. If creating, set to false (pending) or true depending on requirements.
+      // Usually new jobs might need approval or just be active. Assuming pending if admin approval needed.
+      isApproved: widget.job?.isApproved ?? false,
     );
 
     if (widget.job != null) {
@@ -109,132 +115,251 @@ class _JobFormScreenState extends State<JobFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(widget.job != null ? 'Edit Job' : 'Create Job'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Job Title *',
-                  prefixIcon: Icon(Icons.work_outline),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter job title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _domainController,
-                decoration: const InputDecoration(
-                  labelText: 'Domain *',
-                  prefixIcon: Icon(Icons.category),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter domain';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Location *',
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter location';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _experienceController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Experience (years) *',
-                  prefixIcon: Icon(Icons.trending_up),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter experience level';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _salaryController,
-                decoration: const InputDecoration(
-                  labelText: 'Salary Range (Optional)',
-                  prefixIcon: Icon(Icons.attach_money),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _skillsController,
-                decoration: const InputDecoration(
-                  labelText: 'Required Skills (comma-separated) *',
-                  prefixIcon: Icon(Icons.code),
-                  helperText: 'e.g., Flutter, Dart, REST APIs',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter required skills';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 6,
-                decoration: const InputDecoration(
-                  labelText: 'Job Description *',
-                  prefixIcon: Icon(Icons.description),
-                  alignLabelWithHint: true,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter job description';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              SwitchListTile(
-                title: const Text('Job Status'),
-                subtitle: Text(_isActive ? 'Active' : 'Closed'),
-                value: _isActive,
-                onChanged: (value) => setState(() => _isActive = value),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleSubmit,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(widget.job != null ? 'Update Job' : 'Create Job'),
-              ),
-            ],
-          ),
+        backgroundColor: Colors.transparent,
+        title: Text(
+          widget.job != null ? 'Edit Job' : 'Create Job',
+          style: const TextStyle(color: Colors.white),
         ),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.network(
+              'https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=2070&auto=format&fit=crop',
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(color: AppTheme.backgroundColor);
+              },
+              errorBuilder: (context, error, stackTrace) =>
+                  Container(color: AppTheme.backgroundColor),
+            ),
+          ),
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.white.withOpacity(0.9),
+                  ],
+                  stops: const [0.0, 0.3],
+                ),
+              ),
+            ),
+          ),
+          // Form Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: FadeInWidget(
+                delay: const Duration(milliseconds: 100),
+                child: GlassContainer(
+                  opacity: 0.8,
+                  blur: 15,
+                  padding: const EdgeInsets.all(24),
+                  color: Colors.white,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _titleController,
+                          decoration: InputDecoration(
+                            labelText: 'Job Title *',
+                            prefixIcon: const Icon(Icons.work_outline),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter job title';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _domainController,
+                          decoration: InputDecoration(
+                            labelText: 'Domain *',
+                            prefixIcon: const Icon(Icons.category),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter domain';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _locationController,
+                          decoration: InputDecoration(
+                            labelText: 'Location *',
+                            prefixIcon: const Icon(Icons.location_on),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter location';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _experienceController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Exp (years) *',
+                                  prefixIcon: const Icon(Icons.trending_up),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Required';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _salaryController,
+                                decoration: InputDecoration(
+                                  labelText: 'Salary (Opt)',
+                                  prefixIcon: const Icon(Icons.attach_money),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.5),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _skillsController,
+                          decoration: InputDecoration(
+                            labelText: 'Required Skills *',
+                            prefixIcon: const Icon(Icons.code),
+                            helperText: 'e.g., Flutter, Dart, REST APIs',
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter required skills';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _descriptionController,
+                          maxLines: 6,
+                          decoration: InputDecoration(
+                            labelText: 'Job Description *',
+                            prefixIcon: const Icon(Icons.description),
+                            alignLabelWithHint: true,
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter job description';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        SwitchListTile(
+                          title: const Text(
+                            'Job Status',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(_isActive ? 'Active' : 'Closed'),
+                          value: _isActive,
+                          activeColor: AppTheme.primaryColor,
+                          onChanged: (value) =>
+                              setState(() => _isActive = value),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleSubmit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    widget.job != null
+                                        ? 'Update Job'
+                                        : 'Create Job',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

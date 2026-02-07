@@ -4,8 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/fade_in_widget.dart';
-import '../../widgets/slide_in_widget.dart';
-import '../../widgets/animated_button.dart';
+import '../../widgets/glass_container.dart';
 import '../hr/hr_dashboard_screen.dart';
 import '../candidate/candidate_home_screen.dart';
 import 'register_screen.dart';
@@ -81,183 +80,244 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('${widget.role == UserRole.hr ? 'HR' : 'Candidate'} Login'),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.white, AppTheme.primaryColor.withOpacity(0.03)],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 100),
-                    child: SlideInWidget(
-                      direction: SlideDirection.top,
-                      delay: const Duration(milliseconds: 100),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          widget.role == UserRole.hr
-                              ? Icons.business_center
-                              : Icons.person,
-                          size: 64,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 300),
-                    child: Text(
-                      'Welcome Back',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 400),
-                    child: Text(
-                      'Sign in to continue',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  SlideInWidget(
-                    direction: SlideDirection.left,
-                    delay: const Duration(milliseconds: 500),
-                    child: TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SlideInWidget(
-                    direction: SlideDirection.right,
-                    delay: const Duration(milliseconds: 600),
-                    child: TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            );
-                          },
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 700),
-                    child: AnimatedButton(
-                      text: 'Login',
-                      icon: Icons.login,
-                      onPressed: _isLoading ? null : _handleLogin,
-                      isLoading: _isLoading,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 800),
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    RegisterScreen(role: widget.role),
-                            transitionsBuilder:
-                                (
-                                  context,
-                                  animation,
-                                  secondaryAnimation,
-                                  child,
-                                ) {
-                                  return SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(1.0, 0.0),
-                                      end: Offset.zero,
-                                    ).animate(animation),
-                                    child: child,
-                                  );
-                                },
-                          ),
-                        );
-                      },
-                      child: const Text("Don't have an account? Register"),
-                    ),
-                  ),
-                ],
+      ),
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.network(
+              'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop',
+              fit: BoxFit.cover,
+            ),
+          ),
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.6),
+                    Colors.black.withOpacity(0.4),
+                  ],
+                ),
               ),
             ),
           ),
+          // Content
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: FadeInWidget(
+                child: GlassContainer(
+                  opacity: 0.2, // More transparent for premium look
+                  blur: 15,
+                  padding: const EdgeInsets.all(32),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Icon(
+                            widget.role == UserRole.hr
+                                ? Icons.business_center
+                                : Icons.person,
+                            size: 64,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Welcome Back',
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Sign in to your ${widget.role == UserRole.hr ? 'HR' : 'Candidate'} account',
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: Colors.white70),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+                          _buildGlassTextField(
+                            controller: _emailController,
+                            label: 'Email',
+                            icon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true)
+                                return 'Please enter your email';
+                              if (!value!.contains('@'))
+                                return 'Please enter a valid email';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          _buildGlassTextField(
+                            controller: _passwordController,
+                            label: 'Password',
+                            icon: Icons.lock_outlined,
+                            obscureText: _obscurePassword,
+                            onToggleVisibility: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            validator: (value) => (value?.isEmpty ?? true)
+                                ? 'Please enter your password'
+                                : null,
+                          ),
+                          const SizedBox(height: 32),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 8,
+                              shadowColor: AppTheme.primaryColor.withOpacity(
+                                0.5,
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(height: 24),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => RegisterScreen(role: widget.role),
+                                  transitionsBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                        child,
+                                      ) {
+                                        return FadeTransition(
+                                          opacity: animation,
+                                          child: child,
+                                        );
+                                      },
+                                ),
+                              );
+                            },
+                            child: RichText(
+                              text: TextSpan(
+                                text: "Don't have an account? ",
+                                style: const TextStyle(color: Colors.white70),
+                                children: [
+                                  TextSpan(
+                                    text: 'Register',
+                                    style: TextStyle(
+                                      color: AppTheme.primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    VoidCallback? onToggleVisibility,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: Colors.white),
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+        prefixIcon: Icon(icon, color: Colors.white70),
+        suffixIcon: onToggleVisibility != null
+            ? IconButton(
+                icon: Icon(
+                  obscureText ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.white70,
+                ),
+                onPressed: onToggleVisibility,
+              )
+            : null,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppTheme.primaryColor.withOpacity(0.5)),
+        ),
+        errorStyle: const TextStyle(color: Colors.redAccent),
       ),
     );
   }

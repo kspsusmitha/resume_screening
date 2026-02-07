@@ -2,10 +2,16 @@ import 'package:flutter/foundation.dart';
 import '../models/application_model.dart';
 import '../models/user_model.dart';
 import '../services/firebase_database_service.dart';
+import '../providers/notification_provider.dart';
 
 class ApplicationProvider with ChangeNotifier {
   final List<Application> _applications = [];
   bool _isLoading = false;
+  NotificationProvider? _notificationProvider;
+
+  void update(NotificationProvider notificationProvider) {
+    _notificationProvider = notificationProvider;
+  }
 
   List<Application> get applications => _applications;
   bool get isLoading => _isLoading;
@@ -42,15 +48,43 @@ class ApplicationProvider with ChangeNotifier {
     return _applications.where((a) => a.candidateId == candidateId).toList();
   }
 
+  bool hasAppliedForJob(String jobId, String candidateId) {
+    return _applications.any(
+      (app) => app.jobId == jobId && app.candidateId == candidateId,
+    );
+  }
+
   Future<void> createApplication(Application application) async {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final firebaseService = FirebaseDatabaseService();
+      final appId = await firebaseService.createApplication(
+        application.toJson(),
+      );
 
-    _applications.add(application);
-    _isLoading = false;
-    notifyListeners();
+      if (appId != null) {
+        // Update the local model with the generated ID (though it might already match)
+        // ideally we rely on the load, but we can optimistically add it
+        _applications.add(application.copyWith(id: appId));
+
+        // Notify candidate (optional: usually immediate feedback is enough, but notification is good)
+        await _notificationProvider?.sendNotification(
+          userId: application.candidateId,
+          title: 'Application Received',
+          message: 'Your application has been received successfully.',
+          type: 'application_received',
+          relatedId: appId,
+        );
+      }
+    } catch (e) {
+      print('Error creating application: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> updateApplicationStatus(
@@ -60,18 +94,44 @@ class ApplicationProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final firebaseService = FirebaseDatabaseService();
+      await firebaseService.updateApplication(applicationId, {
+        'status': status.toString().split('.').last,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
 
-    final index = _applications.indexWhere((a) => a.id == applicationId);
-    if (index != -1) {
-      _applications[index] = _applications[index].copyWith(
-        status: status,
-        updatedDate: DateTime.now(),
-      );
+      final index = _applications.indexWhere((a) => a.id == applicationId);
+      if (index != -1) {
+        final app = _applications[index];
+        _applications[index] = app.copyWith(
+          status: status,
+          updatedDate: DateTime.now(),
+        );
+
+        // Notify candidate
+        String message =
+            'Your application status has been updated to: ${status.toString().split('.').last.toUpperCase()}';
+        if (status == ApplicationStatus.accepted) {
+          message = 'Congratulations! Your application has been accepted.';
+        } else if (status == ApplicationStatus.rejected) {
+          message = 'Update on your application.';
+        }
+
+        await _notificationProvider?.sendNotification(
+          userId: app.candidateId,
+          title: 'Application Update',
+          message: message,
+          type: 'status_update',
+          relatedId: applicationId,
+        );
+      }
+    } catch (e) {
+      print('Error updating status: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<void> updateApplicationCategory(
@@ -81,18 +141,26 @@ class ApplicationProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final firebaseService = FirebaseDatabaseService();
+      await firebaseService.updateApplication(applicationId, {
+        'category': category.toString().split('.').last,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
 
-    final index = _applications.indexWhere((a) => a.id == applicationId);
-    if (index != -1) {
-      _applications[index] = _applications[index].copyWith(
-        category: category,
-        updatedDate: DateTime.now(),
-      );
+      final index = _applications.indexWhere((a) => a.id == applicationId);
+      if (index != -1) {
+        _applications[index] = _applications[index].copyWith(
+          category: category,
+          updatedDate: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      print('Error updating category: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<void> updateApplicationMatchScore(
@@ -103,19 +171,28 @@ class ApplicationProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final firebaseService = FirebaseDatabaseService();
+      await firebaseService.updateApplication(applicationId, {
+        'matchPercentage': matchPercentage,
+        'missingSkills': missingSkills,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
 
-    final index = _applications.indexWhere((a) => a.id == applicationId);
-    if (index != -1) {
-      _applications[index] = _applications[index].copyWith(
-        matchPercentage: matchPercentage,
-        missingSkills: missingSkills,
-        updatedDate: DateTime.now(),
-      );
+      final index = _applications.indexWhere((a) => a.id == applicationId);
+      if (index != -1) {
+        _applications[index] = _applications[index].copyWith(
+          matchPercentage: matchPercentage,
+          missingSkills: missingSkills,
+          updatedDate: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      print('Error updating match score: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Application? getApplicationById(String applicationId) {
@@ -137,22 +214,49 @@ class ApplicationProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final firebaseService = FirebaseDatabaseService();
+      await firebaseService.updateApplication(applicationId, {
+        'status': ApplicationStatus.interviewScheduled
+            .toString()
+            .split('.')
+            .last,
+        'interviewDate': interviewDate.toIso8601String(),
+        'interviewTime': interviewTime,
+        'interviewerName': interviewerName,
+        'interviewLocation': interviewLocation,
+        'interviewNotes': interviewNotes,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
 
-    final index = _applications.indexWhere((a) => a.id == applicationId);
-    if (index != -1) {
-      _applications[index] = _applications[index].copyWith(
-        status: ApplicationStatus.interviewScheduled,
-        interviewDate: interviewDate,
-        interviewTime: interviewTime,
-        interviewerName: interviewerName,
-        interviewLocation: interviewLocation,
-        interviewNotes: interviewNotes,
-        updatedDate: DateTime.now(),
-      );
+      final index = _applications.indexWhere((a) => a.id == applicationId);
+      if (index != -1) {
+        final app = _applications[index];
+        _applications[index] = app.copyWith(
+          status: ApplicationStatus.interviewScheduled,
+          interviewDate: interviewDate,
+          interviewTime: interviewTime,
+          interviewerName: interviewerName,
+          interviewLocation: interviewLocation,
+          interviewNotes: interviewNotes,
+          updatedDate: DateTime.now(),
+        );
+
+        // Notify candidate
+        await _notificationProvider?.sendNotification(
+          userId: app.candidateId,
+          title: 'Interview Scheduled',
+          message:
+              'An interview has been scheduled. Check details in your application.',
+          type: 'interview_scheduled',
+          relatedId: applicationId,
+        );
+      }
+    } catch (e) {
+      print('Error scheduling interview: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 }

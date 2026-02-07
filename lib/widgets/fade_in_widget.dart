@@ -26,14 +26,8 @@ class _FadeInWidgetState extends State<FadeInWidget>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+    _animation = CurvedAnimation(parent: _controller, curve: widget.curve);
 
     Future.delayed(widget.delay, () {
       if (mounted) {
@@ -50,16 +44,6 @@ class _FadeInWidgetState extends State<FadeInWidget>
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _animation,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.2),
-          end: Offset.zero,
-        ).animate(_animation),
-        child: widget.child,
-      ),
-    );
+    return FadeTransition(opacity: _animation, child: widget.child);
   }
 }
-

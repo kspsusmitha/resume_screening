@@ -7,14 +7,13 @@ import 'providers/job_provider.dart';
 import 'providers/application_provider.dart';
 import 'providers/resume_provider.dart';
 import 'providers/interview_provider.dart';
+import 'providers/notification_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -27,7 +26,14 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => JobProvider()),
-        ChangeNotifierProvider(create: (_) => ApplicationProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, NotificationProvider>(
+          create: (_) => NotificationProvider(),
+          update: (_, auth, notif) => notif!..init(auth),
+        ),
+        ChangeNotifierProxyProvider<NotificationProvider, ApplicationProvider>(
+          create: (_) => ApplicationProvider(),
+          update: (_, notif, app) => app!..update(notif),
+        ),
         ChangeNotifierProvider(create: (_) => ResumeProvider()),
         ChangeNotifierProvider(create: (_) => InterviewProvider()),
       ],

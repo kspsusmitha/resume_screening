@@ -4,7 +4,7 @@ import '../models/resume_screening_result.dart';
 import '../models/interview_model.dart' show QuestionAnswer;
 
 class AIService {
-  static const String _apiKey = 'AIzaSyChcxUCymMoKzf9ckJNJMRgw_oAlTPnYCs';
+  static const String _apiKey = 'AIzaSyADyxoMPVWceKpdQdW0qK2M_-nEXR3ZXDg';
   static const String _modelName = 'gemini-flash-lite-latest';
 
   late final GenerativeModel _model;
@@ -169,14 +169,42 @@ Return only the script text, formatted for easy reading.
     return await generateText(prompt);
   }
 
+  Future<String> generateQuestionHint({
+    required String question,
+    required String jobTitle,
+    required String domain,
+  }) async {
+    final prompt =
+        '''
+Provide a helpful hint for answering this interview question for a $jobTitle position in ($domain).
+Question: "$question"
+
+The hint should:
+- Not give the exact answer
+- Guide the candidate on what key points to cover
+- Be encouraging and brief (1-2 sentences)
+
+Return only the hint text.
+''';
+    return await generateText(prompt);
+  }
+
   Future<List<String>> generateInterviewQuestions({
     required String domain,
     required String jobTitle,
     required int numberOfQuestions,
+    required String category,
   }) async {
     final prompt =
         '''
-Generate $numberOfQuestions interview questions for a $jobTitle position in the $domain domain.
+Generate $numberOfQuestions $category interview questions for a $jobTitle position in the $domain domain.
+
+Category Details:
+- Technical: Specific skills, coding, tools, or domain knowledge
+- Behavioral: Soft skills, conflict resolution, teamwork (STAR method)
+- Situational: Hypothetical work scenarios
+- HR: Cultural fit, career goals, salary expectations
+- Coding: Algorithms, data structures (if applicable)
 
 Return the questions as a JSON array of strings:
 ["question1", "question2", "question3", ...]
@@ -202,13 +230,18 @@ Only return the JSON array, no additional text.
       final List<dynamic> questions = json.decode(jsonStr);
       return questions.map((q) => q.toString()).toList();
     } catch (e) {
-      // Fallback questions
+      // Fallback questions based on category
+      if (category == 'Behavioral') {
+        return [
+          'Tell me about a time you faced a challenge.',
+          'Describe a situation where you showed leadership.',
+          'How do you handle conflict in a team?',
+        ];
+      }
       return [
         'Tell me about yourself.',
         'Why are you interested in this position?',
         'What are your strengths?',
-        'What are your weaknesses?',
-        'Where do you see yourself in 5 years?',
       ];
     }
   }

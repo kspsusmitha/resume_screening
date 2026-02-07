@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/fade_in_widget.dart';
-import '../../widgets/slide_in_widget.dart';
+import '../../widgets/glass_container.dart';
 import 'login_screen.dart';
 import 'admin_login_screen.dart';
 
@@ -12,103 +12,119 @@ class RoleSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              AppTheme.primaryColor.withOpacity(0.05),
-              AppTheme.secondaryColor.withOpacity(0.05),
-            ],
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Image.network(
+              'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop',
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 200),
-                    child: SlideInWidget(
-                      direction: SlideDirection.top,
-                      delay: const Duration(milliseconds: 200),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.work_outline,
-                          size: 80,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 400),
-                    child: Text(
-                      'Welcome to Resume Screening',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  FadeInWidget(
-                    delay: const Duration(milliseconds: 600),
-                    child: Text(
-                      'Choose your role to continue',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 64),
-                  SlideInWidget(
-                    direction: SlideDirection.left,
-                    delay: const Duration(milliseconds: 800),
-                    child: _RoleCard(
-                      icon: Icons.business_center,
-                      title: 'HR Manager',
-                      description:
-                          'Post jobs, screen candidates, and manage hiring',
-                      role: UserRole.hr,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SlideInWidget(
-                    direction: SlideDirection.right,
-                    delay: const Duration(milliseconds: 1000),
-                    child: _RoleCard(
-                      icon: Icons.person,
-                      title: 'Candidate',
-                      description: 'Browse jobs, build resume, and apply',
-                      role: UserRole.candidate,
-                      color: AppTheme.secondaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SlideInWidget(
-                    direction: SlideDirection.left,
-                    delay: const Duration(milliseconds: 1200),
-                    child: _AdminCard(),
-                  ),
-                ],
+          // Gradient Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.1),
+                    AppTheme.primaryColor.withOpacity(0.1),
+                    AppTheme.primaryColor.withOpacity(0.2),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+          // Content
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 200),
+                      child: GlassContainer(
+                        padding: const EdgeInsets.all(24),
+                        borderRadius: BorderRadius.circular(100),
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        child: const Icon(
+                          Icons.work_outline,
+                          size: 64,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 400),
+                      child: Text(
+                        'Welcome to Resume Screening',
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.white.withOpacity(0.8),
+                                  offset: const Offset(0, 1),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 600),
+                      child: Text(
+                        'Choose your role to continue',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 800),
+                      child: _RoleCard(
+                        icon: Icons.business_center,
+                        title: 'HR Manager',
+                        description:
+                            'Post jobs, screen candidates, and manage hiring',
+                        role: UserRole.hr,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 1000),
+                      child: _RoleCard(
+                        icon: Icons.person,
+                        title: 'Candidate',
+                        description: 'Browse jobs, build resume, and apply',
+                        role: UserRole.candidate,
+                        color: AppTheme.secondaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    FadeInWidget(
+                      delay: const Duration(milliseconds: 1200),
+                      child: const _AdminCard(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -169,90 +185,79 @@ class _RoleCardState extends State<_RoleCard>
         builder: (context, child) {
           return Transform.scale(
             scale: 1.0 + (_controller.value * 0.02),
-            child: Card(
-              elevation: _isHovered ? 8 : 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          LoginScreen(role: widget.role),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(1.0, 0.0),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            );
-                          },
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: _isHovered
-                        ? LinearGradient(
-                            colors: [
-                              widget.color.withOpacity(0.1),
-                              widget.color.withOpacity(0.05),
-                            ],
-                          )
-                        : null,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        LoginScreen(role: widget.role),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
                   ),
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: widget.color.withOpacity(
-                            _isHovered ? 0.2 : 0.1,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(widget.icon, color: widget.color, size: 32),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.title,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: widget.color,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.description,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
+                );
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: GlassContainer(
+                opacity: _isHovered ? 0.8 : 0.5,
+                blur: 10,
+                color: Colors.white,
+                padding: const EdgeInsets.all(20),
+                border: Border.all(
+                  color: widget.color.withOpacity(_isHovered ? 0.5 : 0.1),
+                  width: 1.5,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            widget.color.withOpacity(0.2),
+                            widget.color.withOpacity(0.1),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      AnimatedRotation(
-                        turns: _isHovered ? 0.25 : 0,
-                        duration: const Duration(milliseconds: 200),
-                        child: Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: widget.color,
-                        ),
+                      child: Icon(widget.icon, color: widget.color, size: 32),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.description,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.black54, height: 1.3),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: widget.color.withOpacity(0.5),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -306,93 +311,83 @@ class _AdminCardState extends State<_AdminCard>
         builder: (context, child) {
           return Transform.scale(
             scale: 1.0 + (_controller.value * 0.02),
-            child: Card(
-              elevation: _isHovered ? 8 : 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.red.withOpacity(0.3), width: 1),
-              ),
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          const AdminLoginScreen(),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(1.0, 0.0),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            );
-                          },
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: _isHovered
-                        ? LinearGradient(
-                            colors: [
-                              Colors.red.withOpacity(0.1),
-                              Colors.red.withOpacity(0.05),
-                            ],
-                          )
-                        : null,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        const AdminLoginScreen(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
                   ),
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(_isHovered ? 0.2 : 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.admin_panel_settings,
-                          color: Colors.red,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Administrator',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.red,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'System administration and management',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
+                );
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: GlassContainer(
+                opacity: _isHovered ? 0.8 : 0.5,
+                blur: 10,
+                color: Colors.white,
+                padding: const EdgeInsets.all(20),
+                border: Border.all(
+                  color: Colors.red.withOpacity(_isHovered ? 0.5 : 0.1),
+                  width: 1.5,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.red.withOpacity(0.2),
+                            Colors.red.withOpacity(0.1),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      AnimatedRotation(
-                        turns: _isHovered ? 0.25 : 0,
-                        duration: const Duration(milliseconds: 200),
-                        child: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: Colors.red,
-                        ),
+                      child: const Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.red,
+                        size: 32,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Administrator',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'System administration and management',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.black54, height: 1.3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.red.withOpacity(0.5),
+                    ),
+                  ],
                 ),
               ),
             ),
